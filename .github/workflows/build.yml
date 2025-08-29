@@ -30,8 +30,10 @@ jobs:
       with:
         node-version: 18
         
-    - name: install pnpm
-      run: npm install -g pnpm
+    - name: setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 8
         
     - name: setup rust
       uses: dtolnay/rust-toolchain@stable
