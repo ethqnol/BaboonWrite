@@ -1,0 +1,59 @@
+name: build
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            target: aarch64-apple-darwin
+
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: setup node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+        
+    - name: install pnpm
+      run: npm install -g pnpm
+        
+    - name: setup rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ matrix.target }}
+        
+    - name: install deps (ubuntu only)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+        
+    - name: install frontend deps
+      run: pnpm install
+      
+    - name: build app
+      run: pnpm tauri build --target ${{ matrix.target }}
+      
+    - name: upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: baboonwrite-${{ matrix.os }}-${{ matrix.target }}
+        path: |
+          src-tauri/target/${{ matrix.target }}/release/bundle/
+          !src-tauri/target/${{ matrix.target }}/release/bundle/**/*.dSYM/
