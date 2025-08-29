@@ -213,11 +213,51 @@ export default function TypingTest({ settings, onComplete, onRestart, onHome }: 
 
 
   const renderText = () => {
+    // find complete words with errors
+    const words = testState.targetText.split(' ');
+    const wordErrors = new Set<number>();
+    
+    let charPos = 0;
+    for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
+      const word = words[wordIndex];
+      const wordEnd = charPos + word.length;
+      
+      // only check if word is completely typed
+      if (testState.input.length > wordEnd) {
+        let hasError = false;
+        
+        for (let i = 0; i < word.length; i++) {
+          const absolutePos = charPos + i;
+          if (testState.input[absolutePos] !== testState.targetText[absolutePos]) {
+            hasError = true;
+            break;
+          }
+        }
+        
+        if (hasError) {
+          wordErrors.add(wordIndex);
+        }
+      }
+      
+      charPos += word.length + 1;
+    }
+    
     return testState.targetText.split('').map((char, index) => {
       let className = 'text-xl transition-colors duration-150 ';
       
+      // find which word this char belongs to
+      let currentWordIndex = 0;
+      let tempCharPos = 0;
+      for (let i = 0; i < words.length; i++) {
+        if (index >= tempCharPos && index < tempCharPos + words[i].length) {
+          currentWordIndex = i;
+          break;
+        }
+        tempCharPos += words[i].length + 1;
+      }
+      
       if (index < testState.input.length) {
-        if (testState.input[index] === char) {
+        if (testState.input[index] === char && (char === ' ' || !wordErrors.has(currentWordIndex))) {
           className += 'text-green-500 bg-green-500/20';
         } else {
           className += 'text-red-500 bg-red-500/20';
