@@ -135,7 +135,7 @@ export function getRandomWords(
 }
 
 export function getWordsForTime(
-  timeSeconds: number, 
+  _timeSeconds: number, 
   language: 'english' | 'spanish' | 'vim' = 'english',
   includePunctuation: boolean = false,
   includeNumbers: boolean = false
